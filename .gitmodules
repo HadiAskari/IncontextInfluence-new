@@ -1,0 +1,3 @@
+[submodule "DataInf"]
+	path = DataInf
+	url = https://github.com/ykwon0407/DataInf
