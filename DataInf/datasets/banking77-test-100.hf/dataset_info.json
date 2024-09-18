@@ -1,0 +1,68 @@
+{
+  "builder_name": "json",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "banking77",
+  "dataset_size": 1245545,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/mteb/banking77@44fa15921b4c889113cc5df03dd4901b49161ab7/train.jsonl": {
+      "num_bytes": 1245265,
+      "checksum": null
+    },
+    "hf://datasets/mteb/banking77@44fa15921b4c889113cc5df03dd4901b49161ab7/test.jsonl": {
+      "num_bytes": 365101,
+      "checksum": null
+    }
+  },
+  "download_size": 1610366,
+  "features": {
+    "text_old": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "label": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "label_text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "context": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 2855911,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 966335,
+      "num_examples": 10003,
+      "dataset_name": "banking77"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 279210,
+      "num_examples": 3080,
+      "dataset_name": "banking77"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

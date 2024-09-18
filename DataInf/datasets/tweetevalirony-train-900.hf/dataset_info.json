@@ -1,0 +1,81 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "irony",
+  "dataset_name": "tweet_eval",
+  "dataset_size": 421677,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/tweet_eval@b3a375baf0f409c77e6bc7aa35102b7b3534f8be/irony/train-00000-of-00001.parquet": {
+      "num_bytes": 182571,
+      "checksum": null
+    },
+    "hf://datasets/tweet_eval@b3a375baf0f409c77e6bc7aa35102b7b3534f8be/irony/test-00000-of-00001.parquet": {
+      "num_bytes": 53984,
+      "checksum": null
+    },
+    "hf://datasets/tweet_eval@b3a375baf0f409c77e6bc7aa35102b7b3534f8be/irony/validation-00000-of-00001.parquet": {
+      "num_bytes": 61092,
+      "checksum": null
+    }
+  },
+  "download_size": 297647,
+  "features": {
+    "original_text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "label": {
+      "names": [
+        "non_irony",
+        "irony"
+      ],
+      "_type": "ClassLabel"
+    },
+    "context": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "label_text": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 719324,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 259545,
+      "num_examples": 2862,
+      "dataset_name": "tweet_eval"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 75995,
+      "num_examples": 784,
+      "dataset_name": "tweet_eval"
+    },
+    "validation": {
+      "name": "validation",
+      "num_bytes": 86137,
+      "num_examples": 955,
+      "dataset_name": "tweet_eval"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

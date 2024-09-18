@@ -1,0 +1,32 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "original_text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "label": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "context": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "prompt": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "label_text": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}
