@@ -5,5 +5,5 @@ LESS
 ExploreCfg
 # Ignore everything else except these two subdirectories
 # Add exceptions for the directories you want to track
-!icl-coverage
-!DataInf
+!icl-coverage/** 
+!DataInf/** 
