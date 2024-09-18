@@ -1,3 +1,3 @@
-[submodule "DataInf"]
-	path = DataInf
-	url = https://github.com/ykwon0407/DataInf
+[submodule "icl-coverage/src/langchain"]
+	path = icl-coverage/src/langchain
+	url = git+https://github.com/Shivanshu-Gupta/langchain
