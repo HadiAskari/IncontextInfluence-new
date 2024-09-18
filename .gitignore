@@ -1,0 +1,9 @@
+# Ignore all directories starting with "llama" or "Llama"
+DataInf/llama*/
+DataInf/Llama*/
+LESS
+ExploreCfg
+# Ignore everything else except these two subdirectories
+# Add exceptions for the directories you want to track
+!icl-coverage
+!DataInf
