@@ -81,6 +81,7 @@ class InfluenceIdentityScoreSelector(BaseExampleSelector, SelectorUtilsMixin, Ba
     def from_examples(
         cls,
         name,
+        influence_version,
         args: InfluenceIdentityScoreSelectorArgs,
         examples: list[dict],
         example_template: ExampleTemplate,
@@ -141,7 +142,7 @@ class InfluenceIdentityScoreSelector(BaseExampleSelector, SelectorUtilsMixin, Ba
         for idx in query_iter:
             #print(len(sorted_influences.iloc[idx]))
             
-            ids=sorted_influences.iloc[idx][::-1][0:5]
+            ids=sorted_influences.iloc[idx][4::-1]
             print(ids)
             shot_idxs_l.append(ids)
             for id in ids:

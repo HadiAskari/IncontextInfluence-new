@@ -11,6 +11,7 @@ from constants import ExSel as ES
 class CommonSelectorArgs(Parameters):
     selector_type: ES
     n_shots: int
+    influence_version: str
 
 @attr.s(auto_attribs=True)
 class StructuralSelectorArgs(CommonSelectorArgs):

@@ -10,9 +10,9 @@ def get_selector(
     DP=P.data
     
     if SP.selector_type in [
-        ES.COSINE, ES.STRUCT, ES.BERTSCORE, ES.LF_COVERAGE, ES.INFLUENCE, ES.KMEANSCENTROID, ES.KMEANSCLOSEST, ES.SPECTRALAFFINITY, ES.INFLUENCEIDENTITY, ES.COSINEINFLUENCEPRUNING, ES.BERTSCOREINFLUENCEPRUNING, ES.COSINEINFLUENCEREWEIGHTING, ES.BERTSCOREINFLUENCEREWEIGHTING, ES.ROBERTAINFLUENCE
+        ES.COSINE, ES.STRUCT, ES.BERTSCORE, ES.LF_COVERAGE, ES.INFLUENCE, ES.KMEANSCENTROID, ES.KMEANSCLOSEST, ES.SPECTRALAFFINITY, ES.INFLUENCEIDENTITY, ES.COSINEINFLUENCEPRUNING, ES.BERTSCOREINFLUENCEPRUNING, ES.COSINEINFLUENCEREWEIGHTING, ES.BERTSCOREINFLUENCEREWEIGHTING, ES.ROBERTAINFLUENCE, ES.COSINERANDOMPRUNING, ES.BERTSCORERANDOMPRUNING,
     ]:
-        from selector import BertScoreSelector, CosineCoverageSelector, StructuralCoverageSelector, LFCoverageSelector,InfluenceScoreSelector, KmeansCentroidScoreSelector, KmeansClosestScoreSelector, SpectralAffinityScoreSelector, InfluenceIdentityScoreSelector, CosineInfluencePruningCoverageSelector, BertScoreInfluencePruningSelector, CosineInfluenceReweightingCoverageSelector, BertScoreInfluenceReweightingSelector, RobertaInfluenceScoreSelector
+        from selector import BertScoreSelector, CosineCoverageSelector, StructuralCoverageSelector, LFCoverageSelector,InfluenceScoreSelector, KmeansCentroidScoreSelector, KmeansClosestScoreSelector, SpectralAffinityScoreSelector, InfluenceIdentityScoreSelector, CosineInfluencePruningCoverageSelector,CosineRandomPruningCoverageSelector,BertScoreRandomPruningSelector, BertScoreInfluencePruningSelector, CosineInfluenceReweightingCoverageSelector, BertScoreInfluenceReweightingSelector, RobertaInfluenceScoreSelector
         selector_params = P.selector
         common_args = dict(args=selector_params,
                            examples=candidates,
@@ -42,52 +42,62 @@ def get_selector(
             ex_selector = InfluenceScoreSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.KMEANSCLOSEST:
             ex_selector = KmeansClosestScoreSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.KMEANSCENTROID:
             ex_selector = KmeansCentroidScoreSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.SPECTRALAFFINITY:
             ex_selector = SpectralAffinityScoreSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len,name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len,name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.INFLUENCEIDENTITY:
             ex_selector = InfluenceIdentityScoreSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.COSINEINFLUENCEPRUNING:
             ex_selector = CosineInfluencePruningCoverageSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.BERTSCOREINFLUENCEPRUNING:
             ex_selector = BertScoreInfluencePruningSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len,name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len,name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.COSINEINFLUENCEREWEIGHTING:
             ex_selector = CosineInfluenceReweightingCoverageSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.BERTSCOREINFLUENCEREWEIGHTING:
             ex_selector = BertScoreInfluenceReweightingSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
+        elif SP.selector_type == ES.COSINERANDOMPRUNING:
+            ex_selector = CosineRandomPruningCoverageSelector.from_examples(
+                **common_args, query_examples=test_ds,
+                enc_len_fn=enc_len_fn, max_len=max_len,
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
+        elif SP.selector_type == ES.BERTSCORERANDOMPRUNING:
+            ex_selector = BertScoreRandomPruningSelector.from_examples(
+                **common_args, query_examples=test_ds,
+                enc_len_fn=enc_len_fn, max_len=max_len,
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
         elif SP.selector_type == ES.ROBERTAINFLUENCE:
             ex_selector = RobertaInfluenceScoreSelector.from_examples(
                 **common_args, query_examples=test_ds,
                 enc_len_fn=enc_len_fn, max_len=max_len,
-                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name())
+                subtract_gen_len=subtract_gen_len, name=DP.get_dataset_name(), influence_version=SP.influence_version)
     else:
         raise ValueError(f'Unknown selector type: {SP.selector_type}')
     return ex_selector

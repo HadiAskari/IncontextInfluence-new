@@ -2,8 +2,8 @@ from __future__ import annotations
 import sys
 # sys.path.append('/nas02/Hadi/Incontenxt-influence/DataInf/src')
 sys.path.insert(1, '/nas02/Hadi/Incontenxt-influence/icl-coverage/src')
-from selector.lora_model import LORAEngineGeneration
-from selector.influence_generation import IFEngineGeneration
+# from selector.lora_model import LORAEngineGeneration
+# from selector.influence_generation import IFEngineGeneration
 import datasets
 
 import attr
@@ -28,7 +28,7 @@ import os
 
 from selector.dataloader_indirect import create_dataloaders, load_noisy_dataset_by_task
 from selector.lora_model_indirect import LORAEngine
-from selector.influence_generation import IFEngine
+from selector.influence_generation_indirect import IFEngine
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "3"
@@ -86,6 +86,7 @@ class RobertaInfluenceScoreSelector(BaseExampleSelector, SelectorUtilsMixin, Bas
     def from_examples(
         cls,
         name,
+        influence_version,
         args: RobertaInfluenceScoreSelectorArgs,
         examples: list[dict],
         example_template: ExampleTemplate,
@@ -164,7 +165,7 @@ class RobertaInfluenceScoreSelector(BaseExampleSelector, SelectorUtilsMixin, Bas
         for idx in query_iter:
             #print(len(sorted_influences.iloc[idx]))
             
-            ids=sorted_influences.iloc[idx][::-1][0:5]
+            ids=sorted_influences.iloc[idx][4::-1]
             print(ids)
             shot_idxs_l.append(ids)
             for id in ids:

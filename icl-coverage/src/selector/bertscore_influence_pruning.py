@@ -7,8 +7,6 @@ from __future__ import annotations
 import sys
 sys.path.append('/nas02/Hadi/Incontenxt-influence/DataInf/src')
 sys.path.insert(1, '/nas02/Hadi/Incontenxt-influence/icl-coverage/src')
-from selector.lora_model import LORAEngineGeneration
-from selector.influence_generation import IFEngineGeneration
 import attr
 import torch
 import numpy as np
@@ -25,9 +23,10 @@ from selector.greedy import decomposed_coverage_greedy
 from tools.track import track
 from datasets import load_dataset, Dataset
 from constants import ExSel as ES
-import pickle as pkl
-from dataloader import create_dataloaders, load_noisy_dataset_by_task
 
+from dataloader import create_dataloaders, load_noisy_dataset_by_task
+from lora_model import LORAEngine
+from influence import IFEngine
 
 def embed(sents, model, tokenizer, idf_dict, device, contexts=None):
     print(f'Embedding {len(sents)} sentences ...')
@@ -295,6 +294,7 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
     def from_examples(
         cls,
         name,
+        influence_version,
         args: BertScoreInfluencePruningSelectorArgs,
         examples: list[dict],
         example_template: ExampleTemplate,
@@ -305,41 +305,74 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
         device: str = 'cpu',
         progress_bar: bool = True,
     ) -> BertScoreInfluencePruningSelector:
+        import torch
         
-        base_path = "/nas02/Hadi/Incontenxt-influence/DataInf/llama-2-13b-chat-converted" 
-        project_path ="/nas02/Hadi/Incontenxt-influence/DataInf" 
-        lora_engine = LORAEngineGeneration(base_path=base_path, 
-                                        project_path=project_path,
-                                        dataset_name=name)
+        model_name_or_path="roberta-large"
+        task="mrpc"
+        noise_ratio=0.2
+        batch_size=32
+        target_modules=["value"]
+        device="cuda"
+        num_epochs=10
+        lr=3e-4
+        
+        # mrpc_02_noise, noise_added=load_noisy_dataset_by_task(task="mrpc", noise_ratio=0.2)
+        
+        # fine-tuning models
+        dataloader_outputs = create_dataloaders(model_name_or_path=model_name_or_path,
+                                                task=task,
+                                                noise_ratio=noise_ratio,
+                                                batch_size=batch_size)
+        train_dataloader, eval_dataloader, noise_index, tokenized_datasets, collate_fn = dataloader_outputs
 
-        print('creating datasets')
-        tokenized_datasets, collate_fn = lora_engine.create_tokenized_datasets()
+        lora_engine = LORAEngine(model_name_or_path=model_name_or_path,
+                                    target_modules=target_modules,
+                                    train_dataloader=train_dataloader,
+                                    eval_dataloader=eval_dataloader,
+                                    device=device,
+                                    num_epochs=num_epochs,
+                                    lr=lr,
+                                    low_rank=8, 
+                                    task=task)
+
+        lora_engine.build_LORA_model()
+        lora_engine.train_LORA_model()  
+        
         tr_grad_dict, val_grad_dict = lora_engine.compute_gradient(tokenized_datasets, collate_fn)
         
-        with open(f"./training_grad_dict.pkl",'wb') as file:
-            pkl.dump(tr_grad_dict, file)
-        with open(f"./val_grad_dict.pkl",'wb') as file:
-            pkl.dump(val_grad_dict, file)
-        
-        
-        
-        print('computing influences')
-        influence_engine = IFEngineGeneration()
-        influence_engine.preprocess_gradients(tr_grad_dict, val_grad_dict)
-        influence_engine.compute_hvps()
+        influence_engine = IFEngine()
+        influence_engine.preprocess_gradients(tr_grad_dict, val_grad_dict, noise_index)
+        influence_engine.compute_hvps(compute_accurate=False)
         influence_engine.compute_IF()
-        print(influence_engine.IF_dict['identity'].shape)
-        influence_engine.save_result()
-        sorted_influences=influence_engine.IF_dict['identity'].apply(lambda x: x.argsort(), axis=1)
         
+        # vals are identity , proposed , LiSSA 
+        
+        # for method in influence_engine.IF_dict:
+        
+        #abs_vals=[abs(x) for x in influence_engine.IF_dict['proposed']]
+        abs_vals=[x for x in influence_engine.IF_dict[influence_version]]
+        num_to_trim=int(len(abs_vals)*0.20)
+        print(num_to_trim)
+        # abs_vals=abs_vals[0:num_to_trim]
+        ids_to_skip=np.argsort(abs_vals)[::-1][0:num_to_trim]
+        print(np.sort(abs_vals)[0:num_to_trim])
+        print(np.sort(abs_vals)[::-1][0:num_to_trim])
         
         
         examples = cls.drop_duplicates(examples, example_template)
         ex_to_string = lambda ex: example_template.format(**ex, embedding=True)
         query_examples = query_examples or []
 
-        cand_strings = [ex_to_string(ex) for ex in examples]
+        cand_strings_old = [ex_to_string(ex) for ex in examples]
         query_strings = [ex_to_string(ex) for ex in (query_examples or [])]
+        print("Candidate Strings: {}".format(len(cand_strings_old)))
+        cand_strings=[]
+        for idx, string in enumerate(cand_strings_old):
+            if idx in ids_to_skip:
+                # print('yes')
+                continue
+            else:
+                cand_strings.append(string)
         
         
         
@@ -409,7 +442,6 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
         if not args.coverage:
             batch_size = 1
             query_iter = track(chunked(range(n_queries), batch_size), description='Finding shots', total=np.ceil(n_queries/batch_size)) if progress_bar else range(0, n_queries, batch_size)
-            #query_iter = track(range(n_queries), description='Finding shots', total=n_queries) if progress_bar else range(n_queries)
             with torch.no_grad():
                 def get_batch_scores(q_idxes):
                     _query_embs = ls(query_embs, q_idxes)
@@ -428,43 +460,12 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
                         # torch.cuda.empty_cache()
                     scores = torch.cat(scores_l, axis=1)
                     return scores
-                
-                #batch_scores = []
-                shot_scores_l=[]
-                shot_idxs_l=[]
-                
-                #print(len(list(query_iter)))
-                
-                count=0
+                batch_scores = []
                 for q_idxes in query_iter:
-                    #print(q_idxes)
-                    #print(sorted_influences.iloc[q_idxes])
-                    scores=get_batch_scores(q_idxes).cpu()
-                    bertscores_scores_l = scores.sort(axis=-1).values[:, -15:].numpy()
-                    bertscores_idxs_l = scores.argsort(axis=-1)[:, -15:].numpy()
-                    influence_args_rows=sorted_influences.iloc[count][::-1].to_list()
-                    print(type(influence_args_rows))
-                    print(influence_args_rows)
-                    indexes={}
-                    print(bertscores_idxs_l)
-                    for idx in bertscores_idxs_l[0]:
-                        print(idx)
-                        indexes[idx]=influence_args_rows.index(idx)
-                        
-                    lowest_keys = sorted(indexes, key=indexes.get)[:args.n_shots]
-                    
-                    for id in lowest_keys:
-                        # try:
-                        shot_scores_l.append(influence_engine.IF_dict['proposed'][id]) 
-                        
-                    shot_idxs_l.append(lowest_keys)
-                    count+=1
-
-                shot_idxs_l=np.array(shot_idxs_l)
-                shot_scores_l=np.array(shot_scores_l)
-                print("here are the shot ids")
-                print(shot_idxs_l)
-                print(shot_scores_l)
+                    batch_scores.append(get_batch_scores(q_idxes).cpu())
+                scores = torch.cat(batch_scores, axis=0)
+                shot_scores_l = scores.sort(axis=-1).values[:, -args.n_shots:].numpy()
+                shot_idxs_l = scores.argsort(axis=-1)[:, -args.n_shots:].numpy()
             torch.cuda.empty_cache()
             return cls(
                args=args,
@@ -477,7 +478,6 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
             )
         else:
             query_iter = track(range(n_queries), description='Finding shots', total=n_queries) if progress_bar else range(n_queries)
-            
             shot_idxs_l, shot_scores_l = [], []
             for idx in query_iter:
                 if not subtract_gen_len:

@@ -2,16 +2,15 @@ from __future__ import annotations
 import sys
 sys.path.append('/nas02/Hadi/Incontenxt-influence/DataInf/src')
 sys.path.insert(1, '/nas02/Hadi/Incontenxt-influence/icl-coverage/src')
-from selector.lora_model import LORAEngineGeneration
-from selector.influence_generation import IFEngineGeneration
 import attr
 import numpy as np
 from typing import Any
 from pydantic import BaseModel, Extra
 from datasets import Dataset
 from dataloader import create_dataloaders, load_noisy_dataset_by_task
+from lora_model import LORAEngine
+from influence import IFEngine
 
-import pickle as pkl
 
 from langchain.prompts.example_selector.base import BaseExampleSelector
 from prompts.base import ExampleTemplate
@@ -85,7 +84,7 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
     @staticmethod
     def get_independent_shot_idxs(args, query_emb, cand_embs, return_scores=False):
         cand_scores = np.einsum('d,cd->c', query_emb, cand_embs)
-        shot_idxs = np.argsort(cand_scores)[-15:]
+        shot_idxs = np.argsort(cand_scores)[-args.n_shots:]
         if return_scores:
             return shot_idxs, cand_scores[shot_idxs]
         else:
@@ -95,7 +94,7 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
     def get_covering_shot_idxs(
         args, query_emb, cand_embs, cand_lens=None, max_len=-1, return_scores=False
     ):
-        n_shots = 15
+        n_shots = args.n_shots
         cand_dimscores = np.einsum('d,cd->cd', query_emb, cand_embs)
         shot_idxs, _ = decomposed_coverage_greedy(
             n_shots, cand_dimscores, cand_lens=cand_lens, max_len=max_len)
@@ -141,6 +140,7 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
     def from_examples(
         cls,
         name,
+        influence_version,
         args: CosineInfluencePruningCoverageSelectorArgs,
         examples: list[dict],
         example_template: BasePromptTemplate,
@@ -152,38 +152,71 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
         progress_bar: bool = True,
     ) -> CosineInfluencePruningCoverageSelector:
         
-        base_path = "/nas02/Hadi/Incontenxt-influence/DataInf/llama-2-13b-chat-converted" 
-        project_path ="/nas02/Hadi/Incontenxt-influence/DataInf" 
-        lora_engine = LORAEngineGeneration(base_path=base_path, 
-                                        project_path=project_path,
-                                        dataset_name=name)
+        # print(influence_version)
+        
+        model_name_or_path="roberta-large"
+        task="mrpc"
+        noise_ratio=0.2
+        batch_size=32
+        target_modules=["value"]
+        device="cuda"
+        num_epochs=10
+        lr=3e-4
+        
+        # mrpc_02_noise, noise_added=load_noisy_dataset_by_task(task="mrpc", noise_ratio=0.2)
+        
+        # fine-tuning models
+        dataloader_outputs = create_dataloaders(model_name_or_path=model_name_or_path,
+                                                task=task,
+                                                noise_ratio=noise_ratio,
+                                                batch_size=batch_size)
+        train_dataloader, eval_dataloader, noise_index, tokenized_datasets, collate_fn = dataloader_outputs
 
-        print('creating datasets')
-        tokenized_datasets, collate_fn = lora_engine.create_tokenized_datasets()
+        lora_engine = LORAEngine(model_name_or_path=model_name_or_path,
+                                    target_modules=target_modules,
+                                    train_dataloader=train_dataloader,
+                                    eval_dataloader=eval_dataloader,
+                                    device=device,
+                                    num_epochs=num_epochs,
+                                    lr=lr,
+                                    low_rank=8, 
+                                    task=task)
+
+        lora_engine.build_LORA_model()
+        lora_engine.train_LORA_model()  
+        
         tr_grad_dict, val_grad_dict = lora_engine.compute_gradient(tokenized_datasets, collate_fn)
         
-        with open(f"./training_grad_dict.pkl",'wb') as file:
-            pkl.dump(tr_grad_dict, file)
-        with open(f"./val_grad_dict.pkl",'wb') as file:
-            pkl.dump(val_grad_dict, file)
-        
-        
-        
-        print('computing influences')
-        influence_engine = IFEngineGeneration()
-        influence_engine.preprocess_gradients(tr_grad_dict, val_grad_dict)
-        influence_engine.compute_hvps()
+        influence_engine = IFEngine()
+        influence_engine.preprocess_gradients(tr_grad_dict, val_grad_dict, noise_index)
+        influence_engine.compute_hvps(compute_accurate=False)
         influence_engine.compute_IF()
-        print(influence_engine.IF_dict['identity'].shape)
-        influence_engine.save_result()
-        sorted_influences=influence_engine.IF_dict['identity'].apply(lambda x: x.argsort(), axis=1)
         
-
+        # vals are identity , proposed , LiSSA 
+        
+        # for method in influence_engine.IF_dict:
+        
+        #abs_vals=[abs(x) for x in influence_engine.IF_dict['identity']]
+        abs_vals=[x for x in influence_engine.IF_dict[influence_version]]
+        num_to_trim=int(len(abs_vals)*0.10)
+        print(num_to_trim)
+        # abs_vals=abs_vals[0:num_to_trim]
+        ids_to_skip=np.argsort(abs_vals)[::-1][0:num_to_trim]
+        print(np.sort(abs_vals)[0:num_to_trim])
+        print(np.sort(abs_vals)[::-1][0:num_to_trim])
 
         examples = cls.drop_duplicates(examples, example_template)
         ex_to_string = lambda ex: example_template.format(**ex, embedding=True)
-        cand_strings = [ex_to_string(ex) for ex in examples]
+        cand_strings_old = [ex_to_string(ex) for ex in examples]
         query_strings = [ex_to_string(ex) for ex in (query_examples or [])]
+        print("Candidate Strings: {}".format(len(cand_strings_old)))
+        cand_strings=[]
+        for idx, string in enumerate(cand_strings_old):
+            if idx in ids_to_skip:
+                # print('yes')
+                continue
+            else:
+                cand_strings.append(string)
         print("Candidate Strings: {}".format(len(cand_strings)))
         print("Query Strings: {}".format(len(query_strings)))
         query2idx = {query: i for i, query in enumerate(query_strings)}
@@ -214,31 +247,8 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
                 _max_len = max_len - completed_query_lens[idx] - 4
             shot_idxs, shot_scores = cls.get_shot_idxs(
                 args, query_embs[idx], cand_embs, cand_lens, _max_len, True)
-            
-            influence_args_rows=sorted_influences.iloc[idx][::-1].to_list()
-            print(influence_args_rows)
-            print('now cosine')
-            print(shot_idxs)
-            indexes={}
-        
-            for ids in shot_idxs:
-                print(ids)
-                indexes[ids]=influence_args_rows.index(ids)
-                        
-            lowest_keys = sorted(indexes, key=indexes.get)[:args.n_shots]
-            
-            for id in lowest_keys:
-                        # try:
-                shot_scores_l.append(influence_engine.IF_dict['identity'][id]) 
-                        
-            shot_idxs_l.append(lowest_keys)
-        
-        
-        shot_idxs_l=np.array(shot_idxs_l)
-        shot_scores_l=np.array(shot_scores_l)
-        print("here are the shot ids")
-        print(shot_idxs_l)
-        print(shot_scores_l)
+            shot_idxs_l.append(shot_idxs)
+            shot_scores_l.append(shot_scores)
 
         return cls(
             args=args,

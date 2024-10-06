@@ -23,6 +23,8 @@ from selector import (
     InfluenceIdentityScoreSelectorArgs,
     CosineInfluencePruningCoverageSelectorArgs,
     BertScoreInfluencePruningSelectorArgs,
+    CosineRandomPruningCoverageSelectorArgs,
+    BertScoreRandomPruningSelectorArgs,
     CosineInfluenceReweightingCoverageSelectorArgs,
     BertScoreInfluenceReweightingSelectorArgs,
     RobertaInfluenceScoreSelectorArgs
@@ -43,6 +45,8 @@ sel2cls: dict[ES, type] = {
     ES.INFLUENCEIDENTITY: InfluenceIdentityScoreSelectorArgs,
     ES.COSINEINFLUENCEPRUNING: CosineInfluencePruningCoverageSelectorArgs,
     ES.BERTSCOREINFLUENCEPRUNING: BertScoreInfluencePruningSelectorArgs,
+    ES.COSINERANDOMPRUNING: CosineRandomPruningCoverageSelectorArgs,
+    ES.BERTSCORERANDOMPRUNING: BertScoreRandomPruningSelectorArgs,
     ES.COSINEINFLUENCEREWEIGHTING: CosineInfluenceReweightingCoverageSelectorArgs,
     ES.BERTSCOREINFLUENCEREWEIGHTING: BertScoreInfluenceReweightingSelectorArgs,
     ES.ROBERTAINFLUENCE: RobertaInfluenceScoreSelectorArgs
@@ -86,6 +90,7 @@ _short_circuited_args_: list[str] = [
     'test_split',
     'lm_name',
     'n_shots',
+    'influence_version',
     'n_cands',
     'n_test',
     'selector_type',
@@ -96,7 +101,7 @@ class AllParams(Parameters):
     exp: ExperimentParams = ExperimentParams()
     data: DataParams = DataParams()
     llm: LLMParams = LLMParams()
-    selector: CommonSelectorArgs = CommonSelectorArgs(ES.RANDOM, n_shots=10)
+    selector: CommonSelectorArgs = CommonSelectorArgs(ES.RANDOM, n_shots=10, influence_version='proposed')
     completed: bool = False
 
     def __attrs_post_init__(self: AllParams):

@@ -152,6 +152,8 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
     @classmethod
     def from_examples(
         cls,
+        name,
+        influence_version,
         args: CosineInfluenceReweightingCoverageSelectorArgs,
         examples: list[dict],
         example_template: BasePromptTemplate,
@@ -207,7 +209,7 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
         # for method in influence_engine.IF_dict:
         
         #abs_vals=[abs(x) for x in influence_engine.IF_dict['LiSSA']]
-        abs_vals=[x for x in influence_engine.IF_dict['identity']]
+        abs_vals=[x for x in influence_engine.IF_dict[influence_version]]
         max_val=max(abs_vals)
         min_val=min(abs_vals)
         normalized_influence=[]
@@ -276,12 +278,12 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
             
             final=[]
             for inf, cos in zip(normalized_influence,normalized_cosine):
-                final.append(0.5*(inf)+0.5*(cos))
+                final.append(0.6*(inf)+0.4*(cos))
             
             print(len(final))
             
-            shot_idxs=np.argsort(final)[::-1][0:8]
-            shot_scores=np.sort(final)[::-1][0:8]
+            shot_idxs=np.argsort(final)[-args.n_shots:]
+            shot_scores=np.sort(final)[-args.n_shots:]
             
             shot_idxs_l.append(shot_idxs)
             shot_scores_l.append(shot_scores)

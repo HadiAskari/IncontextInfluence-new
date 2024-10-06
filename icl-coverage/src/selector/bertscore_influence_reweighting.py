@@ -293,6 +293,8 @@ class BertScoreInfluenceReweightingSelector(BaseExampleSelector, SelectorUtilsMi
     @classmethod
     def from_examples(
         cls,
+        name,
+        influence_version,
         args: BertScoreInfluenceReweightingSelectorArgs,
         examples: list[dict],
         example_template: ExampleTemplate,
@@ -348,7 +350,7 @@ class BertScoreInfluenceReweightingSelector(BaseExampleSelector, SelectorUtilsMi
         # for method in influence_engine.IF_dict:
         
         #abs_vals=[abs(x) for x in influence_engine.IF_dict['LiSSA']]
-        abs_vals=[x for x in influence_engine.IF_dict['identity']]
+        abs_vals=[x for x in influence_engine.IF_dict[influence_version]]
         max_val=max(abs_vals)
         min_val=min(abs_vals)
         normalized_influence=[]
@@ -488,17 +490,17 @@ class BertScoreInfluenceReweightingSelector(BaseExampleSelector, SelectorUtilsMi
                     for inf, cos in zip(normalized_influence,temp):
                         # print('inf:{}'.format(inf))
                         # print('cos:{}'.format(cos))
-                        temp_list.append(0.5*(inf)+0.5*(cos))
+                        temp_list.append(0.6*(inf)+0.4*(cos))
                     final.append(temp_list)
                 
                 print("Final: {}".format(final))
                 
                 np_matrix = np.array(final)
-                sorted_matrix = np.sort(np_matrix, axis=1)[:, ::-1]
-                arg_sorted_matrix=np.argsort(np_matrix, axis=1)[:, ::-1]
+                sorted_matrix = np.sort(np_matrix, axis=1)
+                arg_sorted_matrix=np.argsort(np_matrix, axis=1)
                 
-                shot_scores_l=sorted_matrix[:, :8]
-                shot_idxs_l=arg_sorted_matrix[:, :8]
+                shot_scores_l=sorted_matrix[:, -args.n_shots:]
+                shot_idxs_l=arg_sorted_matrix[:, -args.n_shots:]
                 
                 # shot_scores_l = final.sort(axis=-1).values[:, -args.n_shots:].numpy()
                 # shot_idxs_l = final.argsort(axis=-1)[:, -args.n_shots:].numpy()

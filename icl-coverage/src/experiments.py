@@ -235,6 +235,8 @@ if True:    # Params
         'spectralaffinity': dict(selector_type=ES.SPECTRALAFFINITY),
         'cosineinfluencepruning': dict(selector_type=ES.COSINEINFLUENCEPRUNING),
         'bertscoreinfluencepruning': dict(selector_type=ES.BERTSCOREINFLUENCEPRUNING),
+        'cosinerandompruning': dict(selector_type=ES.COSINERANDOMPRUNING),
+        'bertscorerandompruning': dict(selector_type=ES.BERTSCORERANDOMPRUNING),
         'cosineinfluencereweighting': dict(selector_type=ES.COSINEINFLUENCEREWEIGHTING),
         'bertscoreinfluencereweighting': dict(selector_type=ES.BERTSCOREINFLUENCEREWEIGHTING),
         'robertainfluence': dict(selector_type=ES.ROBERTAINFLUENCE),
@@ -254,10 +256,12 @@ def main(
     collate_results: bool = True, train_results: bool = False, coverage_results: bool = False,
     batch_size: int = 28, lm_batch_size: Optional[int] = None,
     n_shots: Optional[str] = None, n_cands: Optional[str] = None, prompt_version: Optional[str] = None,
+    influence_version: str = 'proposed'
 ):
     overrides = dict(exp={}, data={}, llm={}, selector={})
     if lm_batch_size: overrides['llm']['lm_batch_size'] = lm_batch_size
     if n_shots: overrides['selector']['n_shots'] = get_ints(n_shots)
+    if influence_version: overrides['selector']['influence_version'] = influence_version
     if n_cands: overrides['data']['n_cands'] = get_ints(n_cands)
     if prompt_version: overrides['data']['prompt_version'] = prompt_version
 
@@ -356,7 +360,7 @@ def main(
                 *get_params_l(1, *common[1:], splits=splits),
                 *get_params_l(2, *common[1:], splits=splits),
             ]
-        elif selector in ['influence','kmeanscentroid','kmeansclosest','spectralaffinity','influenceidentity','cosineinfluencepruning','bertscoreinfluencepruning','cosineinfluencereweighting','bertscoreinfluencereweighting','robertainfluence']:
+        elif selector in ['influence','kmeanscentroid','kmeansclosest','spectralaffinity','influenceidentity','cosineinfluencepruning','bertscoreinfluencepruning','cosineinfluencereweighting','bertscoreinfluencereweighting','robertainfluence', 'cosinerandompruning', 'bertscorerandompruning']:
             params_l += get_params_fn()
 
     from collections import Counter
