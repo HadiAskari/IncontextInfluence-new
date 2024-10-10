@@ -166,7 +166,7 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
     ) -> CosineInfluenceReweightingCoverageSelector:
         
         model_name_or_path="roberta-large"
-        task="mrpc"
+        # task="mrpc"
         noise_ratio=0.2
         batch_size=32
         target_modules=["value"]
@@ -174,11 +174,13 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
         num_epochs=10
         lr=3e-4
         
+        print(name)
+        
         # mrpc_02_noise, noise_added=load_noisy_dataset_by_task(task="mrpc", noise_ratio=0.2)
         
         # fine-tuning models
         dataloader_outputs = create_dataloaders(model_name_or_path=model_name_or_path,
-                                                task=task,
+                                                task=name,
                                                 noise_ratio=noise_ratio,
                                                 batch_size=batch_size)
         train_dataloader, eval_dataloader, noise_index, tokenized_datasets, collate_fn = dataloader_outputs
@@ -191,7 +193,7 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
                                     num_epochs=num_epochs,
                                     lr=lr,
                                     low_rank=8, 
-                                    task=task)
+                                    task=name)
 
         lora_engine.build_LORA_model()
         lora_engine.train_LORA_model()  
@@ -278,7 +280,7 @@ class CosineInfluenceReweightingCoverageSelector(BaseExampleSelector, SelectorUt
             
             final=[]
             for inf, cos in zip(normalized_influence,normalized_cosine):
-                final.append(0.6*(inf)+0.4*(cos))
+                final.append(0.5*(inf)+0.5*(cos))
             
             print(len(final))
             

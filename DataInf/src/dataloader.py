@@ -19,6 +19,7 @@ def flip_label(example, ind, noise_index):
     return example
 
 def load_noisy_dataset_by_task(task="mrpc", noise_ratio=0.1):
+    np.random.seed(42)
     glue_datasets = load_dataset("glue", task) 
     n_train = len(glue_datasets['train'])
     n_val = len(glue_datasets['validation'])
@@ -63,7 +64,7 @@ def create_dataloaders(model_name_or_path="roberta-large",
     if sentence2_key is None:
         tokenized_datasets = noisy_datasets.map(
             tokenize_function,
-            batched=True,
+            batched=True, 
             remove_columns=["idx", sentence1_key],
         )
     else:
@@ -79,9 +80,10 @@ def create_dataloaders(model_name_or_path="roberta-large",
 
     def collate_fn(examples):
         return tokenizer.pad(examples, padding="longest", return_tensors="pt")  
-        
+    
+    
     train_dataloader = DataLoader(tokenized_datasets["train"],
-                                  shuffle=True, 
+                                  shuffle=False, 
                                   collate_fn=collate_fn,
                                   batch_size=batch_size)
     eval_dataloader = DataLoader(tokenized_datasets["validation"], 

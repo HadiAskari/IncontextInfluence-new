@@ -155,7 +155,7 @@ class CosineRandomPruningCoverageSelector(BaseExampleSelector, SelectorUtilsMixi
         examples = cls.drop_duplicates(examples, example_template)
         
         np.random.seed(42)
-        random_numbers = np.random.randint(0, len(examples), size=int(len(examples)*0.2))
+        random_numbers = np.random.randint(0, len(examples), size=int(len(examples)*0.1))
 
         # Convert the NumPy array to a list
         ids_to_skip = random_numbers.tolist()

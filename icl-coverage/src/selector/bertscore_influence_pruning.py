@@ -308,7 +308,7 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
         import torch
         
         model_name_or_path="roberta-large"
-        task="mrpc"
+        #task="mrpc"
         noise_ratio=0.2
         batch_size=32
         target_modules=["value"]
@@ -316,11 +316,11 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
         num_epochs=10
         lr=3e-4
         
-        # mrpc_02_noise, noise_added=load_noisy_dataset_by_task(task="mrpc", noise_ratio=0.2)
-        
+
+        print(name)
         # fine-tuning models
         dataloader_outputs = create_dataloaders(model_name_or_path=model_name_or_path,
-                                                task=task,
+                                                task=name,
                                                 noise_ratio=noise_ratio,
                                                 batch_size=batch_size)
         train_dataloader, eval_dataloader, noise_index, tokenized_datasets, collate_fn = dataloader_outputs
@@ -333,7 +333,7 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
                                     num_epochs=num_epochs,
                                     lr=lr,
                                     low_rank=8, 
-                                    task=task)
+                                    task=name)
 
         lora_engine.build_LORA_model()
         lora_engine.train_LORA_model()  
@@ -345,13 +345,15 @@ class BertScoreInfluencePruningSelector(BaseExampleSelector, SelectorUtilsMixin,
         influence_engine.compute_hvps(compute_accurate=False)
         influence_engine.compute_IF()
         
+        
+        
         # vals are identity , proposed , LiSSA 
         
         # for method in influence_engine.IF_dict:
         
         #abs_vals=[abs(x) for x in influence_engine.IF_dict['proposed']]
         abs_vals=[x for x in influence_engine.IF_dict[influence_version]]
-        num_to_trim=int(len(abs_vals)*0.20)
+        num_to_trim=int(len(abs_vals)*0.1)
         print(num_to_trim)
         # abs_vals=abs_vals[0:num_to_trim]
         ids_to_skip=np.argsort(abs_vals)[::-1][0:num_to_trim]

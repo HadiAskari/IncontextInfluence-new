@@ -1,6 +1,15 @@
 
 DataInf/llama*/
 DataInf/Llama*/
+DataInf/llama.tar
+DataInf/models_to_send
+DataInf/models
+icl-coverage/results/*
+icl-coverage/src/data/*
+icl-coverage/src/selector/tr_dict_70B.pkl
+icl-coverage/src/selector/tr_dict.pkl
+icl-coverage/src/selector/val_dict_70B.pkl
+icl-coverage/src/selector/val_dict.pkl
 LESS
 ExploreCfg
 

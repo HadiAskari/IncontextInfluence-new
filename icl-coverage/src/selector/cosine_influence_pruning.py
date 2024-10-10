@@ -155,7 +155,7 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
         # print(influence_version)
         
         model_name_or_path="roberta-large"
-        task="mrpc"
+        #task="mrpc"
         noise_ratio=0.2
         batch_size=32
         target_modules=["value"]
@@ -163,11 +163,11 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
         num_epochs=10
         lr=3e-4
         
-        # mrpc_02_noise, noise_added=load_noisy_dataset_by_task(task="mrpc", noise_ratio=0.2)
+        print(name)
         
         # fine-tuning models
         dataloader_outputs = create_dataloaders(model_name_or_path=model_name_or_path,
-                                                task=task,
+                                                task=name,
                                                 noise_ratio=noise_ratio,
                                                 batch_size=batch_size)
         train_dataloader, eval_dataloader, noise_index, tokenized_datasets, collate_fn = dataloader_outputs
@@ -180,7 +180,7 @@ class CosineInfluencePruningCoverageSelector(BaseExampleSelector, SelectorUtilsM
                                     num_epochs=num_epochs,
                                     lr=lr,
                                     low_rank=8, 
-                                    task=task)
+                                    task=name)
 
         lora_engine.build_LORA_model()
         lora_engine.train_LORA_model()  

@@ -313,7 +313,7 @@ class BertScoreRandomPruningSelector(BaseExampleSelector, SelectorUtilsMixin, Ba
         
         np.random.seed(42)
         #print(len(examples))
-        random_numbers = np.random.randint(0, len(examples), size=int(len(examples)*0.2))
+        random_numbers = np.random.randint(0, len(examples), size=int(len(examples)*0.1))
 
         # Convert the NumPy array to a list
         ids_to_skip = random_numbers.tolist()

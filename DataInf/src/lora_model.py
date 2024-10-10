@@ -64,7 +64,7 @@ class LORAEngine(object):
         This function fine-tunes a model for GLUE classification tasks. 
         For text generation tasks, please see `notebooks/Influential_Data_Identification-Llama2-Math.ipynb`.
         '''
-        os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+        # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
         metric = evaluate.load("glue", self.task)
         optimizer = AdamW(params=self.model.parameters(), lr=self.lr)

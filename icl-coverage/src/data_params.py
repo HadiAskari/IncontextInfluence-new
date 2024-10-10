@@ -259,8 +259,8 @@ class QNLI(DataParams):
     def get_dataset(self, data_root: str = '../data', dataloaders_dir: str = 'data'):
         data=load_dataset('glue', 'qnli')
         
-        data_train=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qnli-similar-train-900.hf')
-        data_test=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qnli-similar-test-100-no-label.hf')
+        data_train=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qnli-0.2-train.hf')
+        data_test=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qnli-0.2-test.hf')
         
         data['train'] = data_train
         data['validation'] = data_test
@@ -384,8 +384,8 @@ class QQP(DataParams):
     def get_dataset(self, data_root: str = '../data', dataloaders_dir: str = 'data'):
         data=load_dataset('glue', 'qqp')
         
-        data_train=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qqp-train-900.hf')
-        data_test=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qqp-test-100.hf')
+        data_train=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qqp-0.2-train.hf')
+        data_test=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/qqp-0.2-test.hf')
         
         data['train'] = data_train
         data['validation'] = data_test
@@ -446,8 +446,8 @@ class SST2(DataParams):
     def get_dataset(self, data_root: str = '../data', dataloaders_dir: str = 'data'):
         data=load_dataset('glue', 'sst2')
         
-        data_train=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/sst-train-900.hf')
-        data_test=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/sst-test-100.hf')
+        data_train=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/sst2-0.2-train.hf')
+        data_test=load_from_disk('/nas02/Hadi/Incontenxt-influence/DataInf/datasets/sst2-0.2-test.hf')
         
         data['train'] = data_train
         data['validation'] = data_test
